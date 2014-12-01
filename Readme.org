@@ -1,0 +1,44 @@
+* phi-grep.el
+
+Elisp 実装の編集可能な再帰 grep
+
+interactively-editable recursive grep implementation in elisp
+
+** Usage
+
+Require this script
+
+: (require 'phi-grep)
+
+then following commands are available.
+
+- phi-grep-in-file :: grep in a single file
+- phi-grep-in-directory :: recursive grep in a directory tree
+
+in dired-mode buffers, following commands are available in addition.
+
+- phi-grep-dired-in-dir-at-point :: grep in a directory at point
+- phi-grep-dired-in-file-at-point :: grep in a file at point
+- phi-grep-dired-in-marked-files :: grep in all marked files
+- phi-grep-dired-in-all-files :: grep in all listed files
+- phi-grep-dired-dwim :: automatically choose one of above
+
+You can exit phi-grep with one of [C-g] or [RET]. [C-g] will jump you
+back to the original position where phi-grep is invoked, and [RET]
+does not.
+
+You can optionally edit the results of grep, and you will asked
+whether to commit changes or not.
+
+** Comparison
+
+- phi-grep does not depends on the external command "grep".
+  - You can even do phi-grep on other operating systems.
+
+- phi-grep can also search in opened buffers, thus the results reflect
+  unsaved changes.
+
+- results are editable INTERACTIVELY (wgrep is not very interactive).
+
+- results are consistent even when you edit some parts of matched
+  files after invoking phi-grep.
