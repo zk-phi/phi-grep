@@ -52,8 +52,6 @@
 
 ;;; Code:
 
-;; *NEED REFACTORING*
-
 (require 'files)
 (require 'dired)
 (require 'cl-lib)
@@ -337,6 +335,8 @@ there is one."
                  (insert str)
                  (delete-region (point) (point-at-eol)))))
         (overlay-put ov 'face 'phi-grep-modified-face)
+        (when partner
+          (overlay-put partner 'face 'phi-grep-modified-face))
         ;; restore state if undone
         (when (string= str (overlay-get item-ov 'original-str))
           (overlay-put ov 'face nil)
