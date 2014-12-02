@@ -130,24 +130,24 @@
 ;; + utility functions
 ;; ++ general
 
-(defun phi-grep--goto-line (line)
+(defun pgr:goto-line (line)
   "like goto-line but not for interactive use"
   (goto-char (point-min))
   (forward-line (1- line)))
 
-(defun phi-grep--filter (pred lst)
+(defun pgr:filter (pred lst)
   "Return a list of elements in LIST that satisfies PRED."
   (delq nil (mapcar (lambda (elem) (and (funcall pred elem) elem)) lst)))
 
 ;; ++ regexp
 
-(defun phi-grep--string-match-any (str regexps)
+(defun pgr:string-match-any (str regexps)
   "Return non-nil iff some regexps in REGEXPS match STR."
   (and regexps
        (or (string-match (car regexps) str)
-           (phi-grep--string-match-any str (cdr regexps)))))
+           (pgr:string-match-any str (cdr regexps)))))
 
-(defun phi-grep--search-all-regexp (regexp)
+(defun pgr:search-all-regexp (regexp)
   "Return a list of all (LINE-NUM LINE-STR (BEG . END) (BEG
  . END) ...) in the buffer that matches REGEXP."
   (save-excursion
@@ -166,58 +166,47 @@
 
 ;; ++ files
 
-(defun phi-grep--directory-files (dirname &optional recursive only-list)
+(defun pgr:directory-files (dirname &optional recursive only-list)
   "List of files (not directory nor symlink) in DIRNAME. Files
   listed in \"phi-grep-ignored-files\" are excluded. When
   optional arg ONLY-LIST is specified, files not listed in the
   list are also excluded. Directories listed in
   \"phi-grep-ignored-dirs\" are not searched in."
-  (let ((lst (phi-grep--filter
+  (let ((lst (pgr:filter
               (lambda (file) (not (file-symlink-p file)))
               (directory-files dirname t))))
     (message "scanning directory ... %s" (file-relative-name dirname))
     (apply 'nconc
-           (phi-grep--filter
-            (lambda (file)
-              (and (file-regular-p file)
-                   (not (phi-grep--string-match-any file phi-grep-ignored-files))
-                   (or (null only-list)
-                       (phi-grep--string-match-any file only-list))))
-            lst)
+           (pgr:filter (lambda (file)
+                         (and (file-regular-p file)
+                              (not (pgr:string-match-any file phi-grep-ignored-files))
+                              (or (null only-list)
+                                  (pgr:string-match-any file only-list))))
+                       lst)
            (and recursive
                 (mapcar (lambda (dir)
                           (when (and (file-directory-p dir)
                                      (not (member (file-name-nondirectory dir)
                                                   phi-grep-ignored-dirs)))
-                            (phi-grep--directory-files dir t only-list)))
+                            (pgr:directory-files dir t only-list)))
                         lst)))))
 
 ;; ++ overlays
 
-(defun phi-grep--make-overlay (beg end advance &rest properties)
-  "Make an overlay from BEG to END, and put PROPERTIES to the
-  overlay. PROPERTIES must be a plist."
-  (declare (indent 3))
-  (let ((ov (make-overlay beg end nil (not advance) advance)))
-    (while properties
-      (overlay-put ov (car properties) (cadr properties))
-      (setq properties (cddr properties)))
-    ov))
-
-(defun phi-grep--overlay-at (point category)
+(defun pgr:overlay-at (point category)
   "Return an overlay at POINT whose category is CATEGORY, if
 there is one."
-  (cl-some
-   (lambda (ov)
-     (and (eq (overlay-get ov 'category) category) ov))
-   (overlays-at point)))
+  (cl-some (lambda (ov)
+             (when (eq (overlay-get ov 'category) category)
+               ov))
+           (overlays-at point)))
 
-(defun phi-grep--overlay-string (ov)
+(defun pgr:overlay-string (ov)
   "String which is overlayed by OV. text-properties are removed."
   (with-current-buffer (overlay-buffer ov)
     (buffer-substring-no-properties (overlay-start ov) (overlay-end ov))))
 
-(defun phi-grep--replace-overlay-string (ov replacement)
+(defun pgr:replace-overlay-string (ov replacement)
   "Replace string overlayed by OV with REPLACEMENT."
   (with-current-buffer (overlay-buffer ov)
     (delete-region (overlay-start ov) (overlay-end ov))
@@ -226,12 +215,12 @@ there is one."
 
 ;; + main function
 
-(defvar phi-grep--original-buf nil)
-(defvar phi-grep--original-pos nil)
-(defvar phi-grep--original-win nil)
-(defvar phi-grep--occurence-overlay nil)
-(defvar phi-grep--preview-file nil "file showm in *phi-grep preview* buffer")
-(defvar phi-grep--items nil "list of (FILE . (OV OV OV ...))")
+(defvar pgr:original-buf nil)
+(defvar pgr:original-pos nil)
+(defvar pgr:original-win nil)
+(defvar pgr:occurence-overlay nil)
+(defvar pgr:preview-file nil "file showm in *phi-grep preview* buffer")
+(defvar pgr:items nil "list of (FILE . (OV OV OV ...))")
 
 (defun phi-grep-mode ()
   "Major mode to recurse in a tree and perform diverses actions on files."
@@ -241,196 +230,203 @@ there is one."
   (setq mode-name  "phi-grep"
         major-mode 'phi-grep-mode)
   (toggle-truncate-lines 1)
-  (add-hook 'post-command-hook 'phi-grep--update-preview-window nil t)
+  (add-hook 'post-command-hook 'pgr:update-preview-window nil t)
   (run-hooks 'phi-grep-mode-hook))
 
 (defun phi-grep (target-files regexp)
   "Do phi-grep on TARGET-FILES with REGEXP."
-  (let ((win (split-window (selected-window) (- phi-grep-window-height) 'below))
-        (buf (get-buffer-create "*phi-grep*")))
-    (setq phi-grep--original-buf (current-buffer)
-          phi-grep--original-pos (point)
-          phi-grep--original-win (selected-window)
-          phi-grep--preview-file nil
-          phi-grep--items        nil)
+  (let ((win (split-window (selected-window) (- phi-grep-window-height) 'below)))
+    (setq pgr:original-buf (current-buffer)
+          pgr:original-pos (point)
+          pgr:original-win (selected-window)
+          pgr:preview-file nil
+          pgr:items        nil)
     (select-window win)
-    (switch-to-buffer buf)
+    (switch-to-buffer (get-buffer-create "*phi-grep*"))
     (phi-grep-mode)
     (unwind-protect
         (let ((num-targets (length target-files))
               (num-done 0))
           (with-silent-modifications
             (dolist (file target-files)
-              (phi-grep--insert-items file regexp)
+              (pgr:insert-items file regexp)
               (cl-incf num-done)
               (message "searching [%3d/%3d] ... %4d match(es) found"
                        num-done num-targets (1- (line-number-at-pos))))))
       (message "Found %s match(es) for `%s'" (1- (line-number-at-pos)) regexp)
       (goto-char (point-min)))))
 
-(defun phi-grep--make-item-overlay (beg end file linum &optional with-heading)
-  (phi-grep--make-overlay beg end t
-    'category 'phi-grep
-    'filename file
-    'linum    linum
-    'insert-in-front-hooks '(phi-grep--sync-modifications)
-    'insert-behind-hooks   '(phi-grep--sync-modifications)
-    'modification-hooks    '(phi-grep--sync-modifications)
-    'before-string
-    (concat (when with-heading
-              (propertize (concat (file-relative-name file) "\n")
-                          'face 'phi-grep-heading-face))
-            (propertize (format "%4d: " linum)
-                        'face 'phi-grep-line-number-face))))
+(defun pgr:make-item-overlay (beg end file linum &optional with-heading)
+  (let ((ov (make-overlay beg end nil nil t)))
+    (overlay-put ov 'category      'phi-grep)
+    (overlay-put ov 'filename      file)
+    (overlay-put ov 'linum         linum)
+    (overlay-put ov 'before-string (concat
+                                    (when with-heading
+                                      (propertize (concat (file-relative-name file) "\n")
+                                                  'face 'phi-grep-heading-face))
+                                    (propertize (format "%4d: " linum)
+                                                'face 'phi-grep-line-number-face)))
+    (overlay-put ov 'insert-in-front-hooks '(pgr:sync-modifications))
+    (overlay-put ov 'insert-behind-hooks   '(pgr:sync-modifications))
+    (overlay-put ov 'modification-hooks    '(pgr:sync-modifications))
+    ov))
 
-(defun phi-grep--make-partner-overlay (item &optional buf)
+(defun pgr:make-partner-overlay (item &optional buf)
   "make a partner overlay for ITEM in buffer BUF."
   (save-current-buffer
     (when buf (set-buffer buf))
-    (phi-grep--goto-line (overlay-get item 'linum))
-    (let ((ov (phi-grep--make-overlay (point-at-bol) (point-at-eol) t
-                'category 'phi-grep-partner
-                'partner  item
-                'insert-in-front-hooks '(phi-grep--sync-modifications)
-                'insert-behind-hooks   '(phi-grep--sync-modifications)
-                'modification-hooks    '(phi-grep--sync-modifications))))
+    (pgr:goto-line (overlay-get item 'linum))
+    (let ((ov (make-overlay (point-at-bol) (point-at-eol) nil nil t)))
+      (overlay-put ov   'category 'phi-grep-partner)
+      (overlay-put ov   'partner  item)
+      (overlay-put ov   'insert-in-front-hooks '(pgr:sync-modifications))
+      (overlay-put ov   'insert-behind-hooks   '(pgr:sync-modifications))
+      (overlay-put ov   'modification-hooks    '(pgr:sync-modifications))
       (overlay-put item 'partner ov)
       ov)))
 
-(defun phi-grep--insert-items (file regexp)
+(defun pgr:insert-items (file regexp)
   "Insert items in FILE that matches REGEXP."
   (with-silent-modifications
     (let* ((buf (get-file-buffer file))
            (matched-lines (if buf
                               (with-current-buffer buf
-                                (phi-grep--search-all-regexp regexp))
+                                (pgr:search-all-regexp regexp))
                             (with-temp-buffer
                               (insert-file-contents file)
-                              (phi-grep--search-all-regexp regexp))))
-           (first-item-flag t)
+                              (pgr:search-all-regexp regexp))))
+           (first-item-p t)
            items)
       (dolist (line matched-lines)
         (cl-destructuring-bind (linum string . matches) line
           (let ((beg (point)))
             (insert string "\n")
-            (push (phi-grep--make-item-overlay
-                   beg (1- (point)) file linum first-item-flag) items)
-            (setq first-item-flag nil)
-            (when buf (phi-grep--make-partner-overlay (car items) buf))
+            (push (pgr:make-item-overlay beg (1- (point)) file linum first-item-p) items)
+            (setq first-item-p nil)
+            (when buf
+              (pgr:make-partner-overlay (car items) buf))
             ;; make highlight overlays
             (dolist (match matches)
-              (phi-grep--make-overlay (+ (car match) beg) (+ (cdr match) beg) nil
-                'face               'phi-grep-match-face
-                'modification-hooks '(phi-grep--delete-overlay-on-modifications))))))
-      (push (cons file items) phi-grep--items))))
+              (let ((ov (make-overlay (+ (car match) beg) (+ (cdr match) beg))))
+                (overlay-put ov 'face 'phi-grep-match-face)
+                (overlay-put ov 'modification-hooks '(pgr:delete-match-overlay)))))))
+      (push (cons file items) pgr:items))))
 
-(defun phi-grep--sync-modifications (ov after &rest _)
-  (let ((partner (overlay-get ov 'partner)))
-    (if after
-        (let* ((buf (and partner (overlay-buffer partner)))
-               (previewbuf (get-buffer "*phi-grep preview*"))
-               (str (phi-grep--overlay-string ov))
-               (inhibit-modification-hooks t))
-          (cond ((buffer-live-p buf)
-                 (with-current-buffer buf
-                   (phi-grep--replace-overlay-string partner str)))
-                ((and (buffer-live-p previewbuf)
-                      (string= (overlay-get ov 'filename) phi-grep--preview-file))
-                 (with-current-buffer previewbuf
-                   (phi-grep--goto-line (overlay-get ov 'linum))
-                   (insert str)
-                   (delete-region (point) (point-at-eol)))))
-          (overlay-put ov 'face 'phi-grep-modified-face))
-      (let ((item-ov (if (eq (overlay-get ov 'category) 'phi-grep)
-                         ov
-                       partner)))
+(defun pgr:sync-modifications (ov after &rest _)
+  (let* ((partner (overlay-get ov 'partner))
+         (item-ov (if (eq (overlay-get ov 'category) 'phi-grep)
+                      ov
+                    partner)))
+    (if (not after)
+        ;; save original string BEFORE change
         (when (null (overlay-get item-ov 'original-str))
-          (overlay-put item-ov 'original-str (phi-grep--overlay-string item-ov)))))))
+          (overlay-put item-ov 'original-str (pgr:overlay-string item-ov)))
+      (let* ((buf (and partner (overlay-buffer partner)))
+             (previewbuf (get-buffer "*phi-grep preview*"))
+             (str (pgr:overlay-string ov))
+             (inhibit-modification-hooks t))
+        ;; sync modifications AFTER change
+        (cond ((buffer-live-p buf)
+               (with-current-buffer buf
+                 (pgr:replace-overlay-string partner str)))
+              ((and (buffer-live-p previewbuf)
+                    (string= (overlay-get ov 'filename) pgr:preview-file))
+               (with-current-buffer previewbuf
+                 (pgr:goto-line (overlay-get ov 'linum))
+                 (insert str)
+                 (delete-region (point) (point-at-eol)))))
+        (overlay-put ov 'face 'phi-grep-modified-face)
+        ;; restore state if undone
+        (when (string= str (overlay-get item-ov 'original-str))
+          (overlay-put ov 'face nil)
+          (when partner
+            (overlay-put partner 'face nil))
+          (overlay-put item-ov 'original-str nil))))))
 
-(defun phi-grep--delete-overlay-on-modifications (ov after &rest _)
-  (when after (delete-overlay ov)))
+(defun pgr:delete-match-overlay (ov after &rest _)
+  (unless after (delete-overlay ov)))
 
-(defun phi-grep--update-preview-window ()
+(defun pgr:maybe-kill-preview-buffer ()
+  (let ((buf (get-buffer "*phi-grep preview*")))
+    (when (and buf (buffer-live-p buf))
+      (kill-buffer buf))))
+
+(defun pgr:update-preview-window ()
   "Show the selected line at pos in the preview window."
-  (let ((ov (phi-grep--overlay-at (point) 'phi-grep)))
+  (let ((ov (pgr:overlay-at (point) 'phi-grep)))
     (when ov
       (let ((filename (overlay-get ov 'filename))
             (linum (overlay-get ov 'linum))
             deactivate-mark)
-        (when (window-live-p phi-grep--original-win)
-          (with-selected-window phi-grep--original-win
+        (when (window-live-p pgr:original-win)
+          (with-selected-window pgr:original-win
             (let ((buf (get-file-buffer filename)))
               (cond (buf
-                     (let ((pbuf (get-buffer "*phi-grep preview*")))
-                       (when (and pbuf (buffer-live-p pbuf))
-                         (kill-buffer pbuf)))
+                     (pgr:maybe-kill-preview-buffer)
                      (switch-to-buffer buf))
                     (t
-                     (unless (string= phi-grep--preview-file filename)
-                       (let ((buf (get-buffer "*phi-grep preview*")))
-                         (when (and buf (buffer-live-p buf))
-                           (kill-buffer buf)))
+                     (unless (string= pgr:preview-file filename)
+                       (pgr:maybe-kill-preview-buffer)
                        (with-current-buffer (get-buffer-create "*phi-grep preview*")
                          (with-silent-modifications
                            (insert-file-contents filename))
                          (let ((buffer-file-name filename))
                            (ignore-errors (set-auto-mode)))
-                         (setq phi-grep--preview-file filename)
+                         (setq pgr:preview-file filename)
                          ;; sync changes
-                         (dolist (item (cdr (assoc filename phi-grep--items)))
-                           (when (eq (overlay-get item 'face) 'phi-grep-modified-face)
-                             (phi-grep--goto-line (overlay-get item 'linum))
+                         (dolist (item (cdr (assoc filename pgr:items)))
+                           (when (overlay-get item 'original-str)
+                             (pgr:goto-line (overlay-get item 'linum))
                              (save-excursion
                                (delete-region (point-at-bol) (point-at-eol)))
-                             (insert (phi-grep--overlay-string item))))
+                             (insert (pgr:overlay-string item))))
                          (add-hook 'before-change-functions
-                                   'phi-grep--find-preview-file nil t)))
+                                   'pgr:find-preview-file nil t)))
                      (switch-to-buffer "*phi-grep preview*"))))
             ;; jump to the line
-            (phi-grep--goto-line linum)
+            (pgr:goto-line linum)
             (recenter)
             ;; make overlay
-            (if phi-grep--occurence-overlay
-                (move-overlay
-                 phi-grep--occurence-overlay
-                 (point-at-bol) (1+ (point-at-eol)) (current-buffer))
-              (setq phi-grep--occurence-overlay
-                    (phi-grep--make-overlay (point-at-bol) (1+ (point-at-eol)) nil
-                      'face 'phi-grep-overlay-face)))))))))
+            (if pgr:occurence-overlay
+                (move-overlay pgr:occurence-overlay
+                              (point-at-bol) (1+ (point-at-eol)) (current-buffer))
+              (setq pgr:occurence-overlay
+                    (make-overlay (point-at-bol) (1+ (point-at-eol))))
+              (overlay-put pgr:occurence-overlay 'face 'phi-grep-overlay-face))))))))
 
-(defun phi-grep--find-preview-file (&rest _)
+(defun pgr:find-preview-file (&rest _)
   "make it a file buffer."
   (let ((buf (get-buffer "*phi-grep preview*")))
     (when buf
       (with-current-buffer buf
         (let ((modified (buffer-modified-p)))
-          (set-visited-file-name phi-grep--preview-file)
+          (set-visited-file-name pgr:preview-file)
           (restore-buffer-modified-p modified)
-          ;; make partner overlays
+          ;; make partner overlays and apply modifications
           (save-excursion
-            (dolist (ov (cdr (assoc phi-grep--preview-file phi-grep--items)))
-              (let ((partner (phi-grep--make-partner-overlay ov)))
-                ;; apply modifications
-                (when (eq (overlay-get ov 'face) 'phi-grep-modified-face)
-                  (phi-grep--replace-overlay-string partner (phi-grep--overlay-string ov))))))
-          (setq phi-grep--preview-file nil))))))
+            (dolist (ov (cdr (assoc pgr:preview-file pgr:items)))
+              (let ((partner (pgr:make-partner-overlay ov)))
+                (when (overlay-get ov 'original-str)
+                  (pgr:replace-overlay-string partner (pgr:overlay-string ov))))))
+          (setq pgr:preview-file nil))))))
 
-(defadvice find-file-noselect (before phi-grep--find-file-ad activate)
+(defadvice find-file-noselect (before pgr:find-file-ad activate)
   "If the preview buffer is showing the file going to be found,
 reuse the buffer instead of finding file to keep modifications."
-  (when (and phi-grep--preview-file
+  (when (and pgr:preview-file
              (get-buffer "*phi-grep preview*")
-             (string= (file-truename phi-grep--preview-file)
+             (string= (file-truename pgr:preview-file)
                       (file-truename (ad-get-arg 0)))
              (null (ad-get-arg 1)))
-    (phi-grep--find-preview-file)))
+    (pgr:find-preview-file)))
 
-(defun phi-grep--quit ()
+(defun pgr:quit ()
   "Clean up phi-grep buffer and preview buffer."
   ;; commit or revert changes
   (let ((file-changes nil)
         (buf-changes nil))
-    (dolist (items phi-grep--items)
+    (dolist (items pgr:items)
       (when (cl-some (lambda (ov)
                        (eq (overlay-get ov 'face) 'phi-grep-modified-face))
                      (cdr items))
@@ -449,10 +445,10 @@ reuse the buffer instead of finding file to keep modifications."
                      (copy-file file (concat file "~") t))
                    (dolist (change (cdr changes))
                      (let ((line (overlay-get change 'linum)))
-                       (phi-grep--goto-line line)
+                       (pgr:goto-line line)
                        (save-excursion
                          (delete-region (point-at-bol) (point-at-eol)))
-                       (insert (phi-grep--overlay-string change))))
+                       (insert (pgr:overlay-string change))))
                    (write-region (point-min) (point-max) file)))))
             (t
              (dolist (changes buf-changes)
@@ -461,30 +457,31 @@ reuse the buffer instead of finding file to keep modifications."
                    (let* ((partner (overlay-get ov 'partner))
                           (str (overlay-get ov 'original-str)))
                      (when (and partner str)
-                       (phi-grep--replace-overlay-string partner str))))))))))
+                       (pgr:replace-overlay-string partner str))))))))))
   ;; remove partner overlays
-  (dolist (items phi-grep--items)
+  (dolist (items pgr:items)
     (when (get-file-buffer (car items))
       (dolist (item (cdr items))
         (let ((partner (overlay-get item 'partner)))
           (when partner (delete-overlay partner))))))
   ;; clean-up preview buffers and phi-grep windows
-  (when phi-grep--occurence-overlay
-    (delete-overlay phi-grep--occurence-overlay))
+  (when pgr:occurence-overlay
+    (delete-overlay pgr:occurence-overlay))
   (let ((buf (get-buffer "*phi-grep preview*")))
     (when buf (kill-buffer buf)))
+  (kill-buffer)
   (delete-window))
 
 ;; + interactive commands
 
-(defun phi-grep--dired-get-marked-files ()
+(defun pgr:dired-get-marked-files ()
   "Return list of all marked files in a dired buffer."
   (unless (eq major-mode 'dired-mode)
     (error "not in dired buffer"))
   (let ((all-marked (dired-get-marked-files nil nil nil t)))
     (when (symbolp (car all-marked))
       (setq all-marked (cdr all-marked)))
-    (phi-grep--filter 'file-regular-p all-marked)))
+    (pgr:filter 'file-regular-p all-marked)))
 
 ;;;###autoload
 (defun phi-grep-in-file (fname regexp)
@@ -500,7 +497,7 @@ reuse the buffer instead of finding file to keep modifications."
    (list (read-directory-name "Tree: ")
          (read-regexp (if (fboundp 'read-regexp) "Regexp" "Regexp: "))
          (read-string "CheckOnly: ")))
-  (phi-grep (phi-grep--directory-files tree t (split-string only " ")) regexp))
+  (phi-grep (pgr:directory-files tree t (split-string only " ")) regexp))
 
 ;;;###autoload
 (defun phi-grep-dired-in-dir-at-point (regex &optional only)
@@ -531,7 +528,7 @@ reuse the buffer instead of finding file to keep modifications."
   (interactive (list (read-regexp (if (fboundp 'read-regexp) "Regexp" "Regexp: "))))
   (unless (eq major-mode 'dired-mode)
     (error "not in dired buffer"))
-  (phi-grep (phi-grep--dired-get-marked-files) regexp))
+  (phi-grep (pgr:dired-get-marked-files) regexp))
 
 ;;;###autoload
 (defun phi-grep-dired-in-all-files (regexp only)
@@ -541,7 +538,7 @@ reuse the buffer instead of finding file to keep modifications."
   (unless (eq major-mode 'dired-mode)
     (error "not in dired buffer"))
   (phi-grep
-   (phi-grep--directory-files (dired-current-directory) nil (split-string only)) regexp))
+   (pgr:directory-files (dired-current-directory) nil (split-string only)) regexp))
 
 ;;;###autoload
 (defun phi-grep-dired-dwim (regexp &optional only)
@@ -552,13 +549,13 @@ reuse the buffer instead of finding file to keep modifications."
 - directory at point (recursion)"
   (interactive
    (let ((f-or-d-name (dired-get-filename)))
-     (cond ((phi-grep--dired-get-marked-files)
+     (cond ((pgr:dired-get-marked-files)
             (list (read-regexp (if (fboundp 'read-regexp) "Regexp" "Regexp: "))))
            ((file-directory-p f-or-d-name)
             (list (read-regexp (if (fboundp 'read-regexp) "Regexp" "Regexp: "))
                   (read-string "CheckOnly: "))))))
   (let ((fname (dired-get-filename)))
-    (cond ((phi-grep--dired-get-marked-files)
+    (cond ((pgr:dired-get-marked-files)
            (phi-grep-dired-in-marked-files regexp))
           ((file-directory-p fname)
            (phi-grep-dired-in-dir-at-point regexp only)))))
@@ -570,24 +567,24 @@ reuse the buffer instead of finding file to keep modifications."
    (expand-file-name
     (completing-read "Find File: "
                      (mapcar (lambda (f) (file-relative-name f tree))
-                             (phi-grep--directory-files tree t))
+                             (pgr:directory-files tree t))
                      nil t)
     tree)))
 
 (defun phi-grep-abort ()
   "Quit phi-grep window and back to the original position."
   (interactive)
-  (phi-grep--quit)
-  (when (buffer-live-p phi-grep--original-buf)
-    (switch-to-buffer phi-grep--original-buf)
-    (goto-char phi-grep--original-pos)))
+  (pgr:quit)
+  (when (buffer-live-p pgr:original-buf)
+    (switch-to-buffer pgr:original-buf)
+    (goto-char pgr:original-pos)))
 
 (defun phi-grep-exit ()
   "Quit phi-grep window with the preview window kept."
   (interactive)
-  (phi-grep--update-preview-window)
-  (phi-grep--find-preview-file)
-  (phi-grep--quit))
+  (pgr:update-preview-window)
+  (pgr:find-preview-file)
+  (pgr:quit))
 
 ;; + provide
 
