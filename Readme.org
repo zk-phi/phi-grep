@@ -4,6 +4,10 @@ Elisp 実装の編集可能な再帰 grep
 
 interactively-editable recursive grep implementation in elisp
 
+** Screencast
+
+[[screencast.gif]]
+
 ** Usage
 
 Require this script
