@@ -34,15 +34,23 @@ does not.
 You can optionally edit the results of grep, and you will asked
 whether to commit changes or not.
 
-** Comparison
+** Advantages
 
-- phi-grep does not depends on the external command "grep".
-  - You can even do phi-grep on other operating systems.
+- Implemented in pure Elisp.
 
-- phi-grep can also search in opened buffers, thus the results reflect
-  unsaved changes.
+  - phi-grep can also search in opened buffers (not only files on the
+    disk), thus the results can reflect unsaved changes.
 
-- results are editable INTERACTIVELY (wgrep is not very interactive).
+  - phi-grep does not depends on the external command "grep". So you
+    can do grep-and-edit on every OS that Emacs can run on.
 
-- results are consistent even when you edit some parts of matched
-  files after invoking phi-grep.
+- Results are editable INTERACTIVELY with preview.
+
+- Results are consistent even when you edit some parts of matched
+  files after phi-grep.
+
+** Note
+
+This project is in very beta stage. The code may have some bugs, and
+needs refactoring. Please do report/fix bugs. Contributions are
+welcome!
