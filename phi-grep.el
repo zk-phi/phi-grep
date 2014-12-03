@@ -93,8 +93,10 @@
   "Keymap for phi-grep buffers."
   :group 'phi-grep)
 
-(defcustom phi-grep-make-backup t
-  "when non-nil, backup-files are created on comitting changes."
+(defcustom phi-grep-make-backup-function 'phi-grep-default-backup-function
+  "a function that takes one argument, FILENAME, and backups the
+file somewhere. this variable can also set nil, to tell phi-grep
+not to make backup files."
   :group 'phi-grep)
 
 (defcustom phi-grep-window-height 20
@@ -161,6 +163,10 @@
       (nreverse res))))
 
 ;; ++ files
+
+(defun phi-grep-default-backup-function (file)
+  "backup FILE"
+  (copy-file file (concat file "~") t))
 
 (defun pgr:directory-files (dirname &optional recursive only-list)
   "List of files (not directory nor symlink) in DIRNAME. Files
@@ -438,9 +444,9 @@ reuse the buffer instead of finding file to keep modifications."
              (dolist (changes file-changes)
                (let ((file (car changes)))
                  (with-temp-buffer
+                   (when phi-grep-make-backup-function
+                     (funcall phi-grep-make-backup-function file))
                    (insert-file-contents file)
-                   (when phi-grep-make-backup
-                     (copy-file file (concat file "~") t))
                    (dolist (change (cdr changes))
                      (let ((line (overlay-get change 'linum)))
                        (pgr:goto-line line)
