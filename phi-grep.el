@@ -94,9 +94,10 @@
   :group 'phi-grep)
 
 (defcustom phi-grep-make-backup-function 'phi-grep-default-backup-function
-  "a function that takes one argument, FILENAME, and backups the
-file somewhere. this variable can also set nil, to tell phi-grep
-not to make backup files."
+  "a function called with one argument, FILENAME, before
+comitting changes to the file. the function is expected to make a
+backup of the file. this variable can also set nil, to tell
+phi-grep not to make backups."
   :group 'phi-grep)
 
 (defcustom phi-grep-window-height 20
