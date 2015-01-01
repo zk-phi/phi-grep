@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1alpha
+;; Version: 1.0.0
 
 ;;; Commentary:
 
@@ -48,13 +48,15 @@
 
 ;;; Change Log:
 
+;; 1.0.0 first released
+
 ;;; Code:
 
 (require 'files)
 (require 'dired)
 (require 'cl-lib)
 
-(defconst phi-grep-version "1alpha")
+(defconst phi-grep-version "1.0.0")
 
 ;; + user options
 
