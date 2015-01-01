@@ -31,26 +31,20 @@ You can exit phi-grep with one of [C-g] or [RET]. [C-g] will jump you
 back to the original position where phi-grep is invoked, and [RET]
 does not.
 
-You can optionally edit the results of grep, and you will asked
-whether to commit changes or not.
+You can optionally edit the result of grep, and you will asked whether
+to commit changes or not.
 
 ** Advantages
 
 - Implemented in pure Elisp.
 
   - phi-grep can also search in opened buffers (not only files on the
-    disk), thus the results can reflect unsaved changes.
+    disk), thus the result can reflect unsaved changes.
 
   - phi-grep does not depends on the external command "grep". So you
     can do grep-and-edit on every OS that Emacs can run on.
 
-- Results are editable INTERACTIVELY with preview.
+- Result is editable INTERACTIVELY with preview.
 
-- Results are consistent even when you edit some parts of matched
-  files after phi-grep.
-
-** Note
-
-This project is in very beta stage. The code may have some bugs, and
-needs refactoring. Please do report/fix bugs. Contributions are
-welcome!
+- Result is consistent even when you edit some parts of matched files
+  after phi-grep.
