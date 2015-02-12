@@ -257,8 +257,9 @@ there is one."
             (dolist (file target-files)
               (pgr:insert-items file regexp)
               (cl-incf num-done)
-              (message "searching [%3d/%3d] ... %4d match(es) found"
-                       num-done num-targets (1- (line-number-at-pos))))))
+              (let ((message-log-max nil))
+                (message "searching [%3d/%3d] ... %4d match(es) found"
+                         num-done num-targets (1- (line-number-at-pos)))))))
       (message "Found %s match(es) for `%s'" (1- (line-number-at-pos)) regexp)
       (goto-char (point-min)))))
 
