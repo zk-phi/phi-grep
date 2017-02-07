@@ -513,7 +513,7 @@ reuse the buffer instead of finding file to keep modifications."
    (list (read-directory-name "Tree: ")
          (read-regexp (if (fboundp 'read-regexp) "Regexp" "Regexp: "))
          (read-string "CheckOnly: ")))
-  (phi-grep (pgr:directory-files tree t (split-string only " ")) regexp))
+  (phi-grep (pgr:directory-files tree t (split-string (or only "") " ")) regexp))
 
 ;;;###autoload
 (defun phi-grep-dired-in-dir-at-point (regex &optional only)
