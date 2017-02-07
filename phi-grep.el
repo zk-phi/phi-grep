@@ -159,17 +159,16 @@ phi-grep not to make backups."
   "Return a list of all (LINE-NUM LINE-STR (BEG . END) (BEG
  . END) ...) in the buffer that matches REGEXP."
   (save-excursion
-    (let ((cnt 1) res)
-      (dolist (line (split-string
-                     (buffer-substring-no-properties (point-min) (point-max))
-                     "\n"))
-        (when (string-match regexp line)
-          (let (matches)
-            (while (progn
-                     (push (cons (match-beginning 0) (match-end 0)) matches)
-                     (string-match regexp line (1+ (caar matches)))))
-            (push (cons cnt (cons line matches)) res)))
-        (cl-incf cnt))
+    (let (res)
+      (goto-char 1)
+      (while (search-forward-regexp regexp nil t)
+        (let ((beg (point-at-bol)) (end (point-at-eol)) matches)
+          (while (progn
+                   (push (cons (- (match-beginning 0) beg) (- (match-end 0) beg)) matches)
+                   (search-forward-regexp regexp end t)))
+          (push (cons (line-number-at-pos)
+                      (cons (buffer-substring-no-properties beg end) matches))
+                res)))
       (nreverse res))))
 
 ;; ++ files
@@ -308,6 +307,8 @@ there is one."
                                 (pgr:search-all-regexp regexp))
                             (with-temp-buffer
                               (insert-file-contents file)
+                              (let ((buffer-file-name file))
+                                (ignore-errors (set-auto-mode)))
                               (pgr:search-all-regexp regexp))))
            (first-item-p t)
            items)
