@@ -75,16 +75,19 @@
     "\.ppt$" "\.pptx$" "\.xls$" "\.xlsx$" "\.doc$" "\.docx$"
     "~$" "#[^/]+#$")
   "List of regexps that defines what files to ignore."
+  :type '(list string)
   :group 'phi-grep)
 
 (defcustom phi-grep-ignored-dirs
   '("." ".." ".hg" ".svn" "RCS" ".bzr" ".git"
     ".VirtualBox" ".arch-ids" "CVS" "{arch}" "knits")
   "List of directory names we don't want to search in."
+  :type '(list string)
   :group 'phi-grep)
 
 (defcustom phi-grep-mode-hook nil
   "Hook run when initializing phi-grep buffers."
+  :type '(list function)
   :group 'phi-grep)
 
 (defcustom phi-grep-mode-map
@@ -94,6 +97,7 @@
     (define-key kmap [remap kill-buffer] 'phi-grep-abort)
     kmap)
   "Keymap for phi-grep buffers."
+  :type '(restricted-sexp :match-alternatives (syntax-table-p))
   :group 'phi-grep)
 
 (defcustom phi-grep-make-backup-function 'phi-grep-default-backup-function
@@ -101,10 +105,12 @@
 comitting changes to the file. the function is expected to make a
 backup of the file. this variable can also set nil, to tell
 phi-grep not to make backups."
+  :type 'function
   :group 'phi-grep)
 
 (defcustom phi-grep-window-height 20
   "height of phi-grep window"
+  :type 'integer
   :group 'phi-grep)
 
 ;; + faces
