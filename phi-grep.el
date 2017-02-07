@@ -1,6 +1,6 @@
 ;;; phi-grep.el --- Interactively-editable recursive grep implementation in elisp
 
-;; Copyright (C) 2014-2015 zk_phi
+;; Copyright (C) 2014- zk_phi
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.0.0
+;; Version: 1.1.0
 ;; Package-Requires: ((cl-lib "0.1"))
 
 ;;; Commentary:
@@ -49,7 +49,8 @@
 
 ;;; Change Log:
 
-;; 1.0.0 first released
+;; 1.0.0 First release
+;; 1.1.0 Respect the language's syntax table while searching
 
 ;;; Code:
 
@@ -57,7 +58,7 @@
 (require 'dired)
 (require 'cl-lib)
 
-(defconst phi-grep-version "1.0.0")
+(defconst phi-grep-version "1.1.0")
 
 ;; + user options
 
