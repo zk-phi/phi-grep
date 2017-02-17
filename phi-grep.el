@@ -450,30 +450,24 @@ reuse the buffer instead of finding file to keep modifications."
             (push items buf-changes)
           (push items file-changes))))
     (when (or file-changes buf-changes)
-      (cond ((y-or-n-p (format "commit changes to %d files, %d buffers ?"
-                               (length file-changes)
-                               (length buf-changes)))
-             (dolist (changes file-changes)
-               (let ((file (car changes)))
-                 (with-temp-buffer
-                   (when phi-grep-make-backup-function
-                     (funcall phi-grep-make-backup-function file))
-                   (insert-file-contents file)
-                   (dolist (change (cdr changes))
-                     (let ((line (overlay-get change 'linum)))
-                       (pgr:goto-line line)
-                       (save-excursion
-                         (delete-region (point-at-bol) (point-at-eol)))
-                       (insert (pgr:overlay-string change))))
-                   (write-region (point-min) (point-max) file)))))
-            (t
-             (dolist (changes buf-changes)
-               (with-current-buffer (get-file-buffer (car changes))
-                 (dolist (ov (cdr changes))
-                   (let* ((partner (overlay-get ov 'partner))
-                          (str (overlay-get ov 'original-str)))
-                     (when (and partner str)
-                       (pgr:replace-overlay-string partner str))))))))))
+      (when (y-or-n-p (format "Save %d files, %d buffers ?"
+                              (length file-changes) (length buf-changes)))
+        (dolist (changes file-changes)
+          (let ((file (car changes)))
+            (with-temp-buffer
+              (when phi-grep-make-backup-function
+                (funcall phi-grep-make-backup-function file))
+              (insert-file-contents file)
+              (dolist (change (cdr changes))
+                (let ((line (overlay-get change 'linum)))
+                  (pgr:goto-line line)
+                  (save-excursion
+                    (delete-region (point-at-bol) (point-at-eol)))
+                  (insert (pgr:overlay-string change))))
+              (write-region (point-min) (point-max) file))))
+        (dolist (changes buf-changes)
+          (with-current-buffer (get-file-buffer (car changes))
+            (save-buffer))))))
   ;; remove partner overlays
   (dolist (items pgr:items)
     (when (get-file-buffer (car items))
