@@ -383,23 +383,22 @@ there is one."
                      (pgr:maybe-kill-preview-buffer)
                      (switch-to-buffer buf))
                     (t
-                     (unless (string= pgr:preview-file filename)
-                       (pgr:maybe-kill-preview-buffer)
-                       (with-current-buffer (get-buffer-create "*phi-grep preview*")
-                         (with-silent-modifications
-                           (insert-file-contents filename))
-                         (let ((buffer-file-name filename))
-                           (ignore-errors (set-auto-mode)))
-                         (setq pgr:preview-file filename)
-                         ;; sync changes
-                         (dolist (item (cdr (assoc filename pgr:items)))
-                           (when (overlay-get item 'original-str)
-                             (pgr:goto-line (overlay-get item 'linum))
-                             (save-excursion
-                               (delete-region (point-at-bol) (point-at-eol)))
-                             (insert (pgr:overlay-string item))))
-                         (add-hook 'before-change-functions
-                                   'pgr:find-preview-file nil t)))
+                     (pgr:maybe-kill-preview-buffer)
+                     (with-current-buffer (get-buffer-create "*phi-grep preview*")
+                       (with-silent-modifications
+                         (insert-file-contents filename))
+                       (let ((buffer-file-name filename))
+                         (ignore-errors (set-auto-mode)))
+                       (setq pgr:preview-file filename)
+                       ;; sync changes
+                       (dolist (item (cdr (assoc filename pgr:items)))
+                         (when (overlay-get item 'original-str)
+                           (pgr:goto-line (overlay-get item 'linum))
+                           (save-excursion
+                             (delete-region (point-at-bol) (point-at-eol)))
+                           (insert (pgr:overlay-string item))))
+                       (add-hook 'before-change-functions
+                                 'pgr:find-preview-file nil t))
                      (switch-to-buffer "*phi-grep preview*"))))
             ;; jump to the line
             (pgr:goto-line linum)
