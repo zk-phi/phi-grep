@@ -78,19 +78,19 @@
     "\.ppt$" "\.pptx$" "\.xls$" "\.xlsx$" "\.doc$" "\.docx$"
     "~$" "#[^/]+#$")
   "List of regexps that defines what files to ignore."
-  :type '(list string)
+  :type '(repeat string)
   :group 'phi-grep)
 
 (defcustom phi-grep-ignored-dirs
   '("." ".." ".hg" ".svn" "RCS" ".bzr" ".git"
     ".VirtualBox" ".arch-ids" "CVS" "{arch}" "knits")
   "List of directory names we don't want to search in."
-  :type '(list string)
+  :type '(repeat string)
   :group 'phi-grep)
 
 (defcustom phi-grep-mode-hook nil
   "Hook run when initializing phi-grep buffers."
-  :type '(list function)
+  :type '(repeat function)
   :group 'phi-grep)
 
 (defcustom phi-grep-mode-map
