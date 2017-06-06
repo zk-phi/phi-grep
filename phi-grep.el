@@ -98,6 +98,8 @@
     (define-key kmap (kbd "RET") 'phi-grep-exit)
     (define-key kmap (kbd "C-g") 'phi-grep-abort)
     (define-key kmap [remap kill-buffer] 'phi-grep-abort)
+    (define-key kmap [remap phi-grep-in-directory] 'phi-grep-recursive)
+    (define-key kmap [remap phi-grep-in-file] 'phi-grep-recursive)
     kmap)
   "Keymap for phi-grep buffers."
   :type '(restricted-sexp :match-alternatives (syntax-table-p))
@@ -214,6 +216,11 @@ there is one."
              (when (eq (overlay-get ov 'category) category)
                ov))
            (overlays-at point)))
+
+(defun pgr:overlays-in (from to category)
+  "Return all overlays between FROM and TO whose category is
+CATEGORY."
+  (cl-remove-if-not (lambda (ov) (eq (overlay-get ov 'category) category)) (overlays-in from to)))
 
 (defun pgr:overlay-string (ov)
   "String which is overlayed by OV. text-properties are removed."
@@ -574,6 +581,9 @@ reuse the buffer instead of finding file to keep modifications."
 
 ;;;###autoload
 (defun phi-grep-find-file-flat (tree)
+  "Like `find-file' but all files under the directory TREE may be
+completed with `completing-read'. This may be useful when you are
+using a library like `ido-ubiquitous'."
   (interactive (list (read-directory-name "Tree : ")))
   (find-file
    (expand-file-name
@@ -582,6 +592,18 @@ reuse the buffer instead of finding file to keep modifications."
                              (pgr:directory-files tree t))
                      nil t)
     tree)))
+
+(defun phi-grep-recursive ()
+  "phi-grep in all files lited in this phi-grep result."
+  (interactive)
+  (unless (eq major-mode 'phi-grep-mode)
+    (error "Not in a phi-grep result buffer."))
+  (let ((files (cl-remove-duplicates
+                (mapcar (lambda (ov) (overlay-get ov 'filename))
+                        (pgr:overlays-in (point-min) (point-max) 'phi-grep))))
+        (regexp (read-regexp (if (fboundp 'read-regexp) "Recursive grep" "Recursive grep: "))))
+    (phi-grep-abort)
+    (phi-grep files regexp)))
 
 (defun phi-grep-abort ()
   "Quit phi-grep window and back to the original position."
