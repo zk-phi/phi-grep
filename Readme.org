@@ -19,13 +19,17 @@ then following commands are available.
 - phi-grep-in-file :: grep in a single file
 - phi-grep-in-directory :: recursive grep in a directory tree
 
-in dired-mode buffers, following commands are available in addition.
+In dired-mode buffers, following commands are available in addition.
 
 - phi-grep-dired-in-dir-at-point :: grep in a directory at point
 - phi-grep-dired-in-file-at-point :: grep in a file at point
 - phi-grep-dired-in-marked-files :: grep in all marked files
 - phi-grep-dired-in-all-files :: grep in all listed files
 - phi-grep-dired-dwim :: automatically choose one of above
+
+In the phi-grep result buffer, you can also perform a recursive grep.
+
+- phi-grep-recursive :: grep within the files in the current result
 
 You can exit phi-grep with one of [C-g] or [RET]. [C-g] will jump you
 back to the original position where phi-grep is invoked, and [RET]
