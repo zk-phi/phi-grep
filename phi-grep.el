@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.2.0
+;; Version: 1.2.1
 ;; Package-Requires: ((cl-lib "0.1"))
 
 ;;; Commentary:
@@ -53,6 +53,7 @@
 ;; 1.1.0 Respect the language's syntax table while searching
 ;; 1.1.1 Bug fix
 ;; 1.2.0 do not to query whether to restore changes but to save
+;; 1.2.1 add recursive phi-grep feature
 
 ;;; Code:
 
@@ -60,7 +61,7 @@
 (require 'dired)
 (require 'cl-lib)
 
-(defconst phi-grep-version "1.2.0")
+(defconst phi-grep-version "1.2.1")
 
 ;; + user options
 
