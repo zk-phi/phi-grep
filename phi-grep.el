@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://github.com/zk-phi/phi-grep
-;; Version: 1.2.1
+;; Version: 1.2.2
 ;; Package-Requires: ((cl-lib "0.1"))
 
 ;;; Commentary:
@@ -54,6 +54,7 @@
 ;; 1.1.1 Bug fix
 ;; 1.2.0 do not to query whether to restore changes but to save
 ;; 1.2.1 add recursive phi-grep feature
+;; 1.2.2 add option phi-grep-enable-syntactic-regex
 
 ;;; Code:
 
@@ -61,7 +62,7 @@
 (require 'dired)
 (require 'cl-lib)
 
-(defconst phi-grep-version "1.2.1")
+(defconst phi-grep-version "1.2.2")
 
 ;; + user options
 
