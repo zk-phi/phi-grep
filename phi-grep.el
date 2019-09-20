@@ -119,6 +119,12 @@ phi-grep not to make backups."
   :type 'integer
   :group 'phi-grep)
 
+(defcustom phi-grep-enable-syntactic-regex t
+  "when non-nil, phi-grep applies an appropreate major-mode for
+each target files before searching into."
+  :type 'boolean
+  :group 'phi-grep)
+
 ;; + faces
 
 (defface phi-grep-heading-face '((t (:inverse-video t)))
@@ -318,8 +324,9 @@ CATEGORY."
                                 (pgr:search-all-regexp regexp))
                             (with-temp-buffer
                               (insert-file-contents file)
-                              (let ((buffer-file-name file))
-                                (ignore-errors (set-auto-mode)))
+                              (when phi-grep-enable-syntactic-regex
+                                (let ((buffer-file-name file))
+                                  (ignore-errors (set-auto-mode))))
                               (pgr:search-all-regexp regexp))))
            (first-item-p t)
            items)
