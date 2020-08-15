@@ -18,8 +18,8 @@
 
 ;; Author: zk_phi
 ;; URL: http://github.com/zk-phi/phi-grep
-;; Version: 1.2.2
-;; Package-Requires: ((cl-lib "0.1"))
+;; Version: 1.2.3
+;; Package-Requires: ((cl-lib "0.1") (emacs "24.4"))
 
 ;;; Commentary:
 
@@ -55,6 +55,7 @@
 ;; 1.2.0 do not to query whether to restore changes but to save
 ;; 1.2.1 add recursive phi-grep feature
 ;; 1.2.2 add option phi-grep-enable-syntactic-regex
+;; 1.2.3 migrate to nadvice.el
 
 ;;; Code:
 
@@ -62,7 +63,7 @@
 (require 'dired)
 (require 'cl-lib)
 
-(defconst phi-grep-version "1.2.2")
+(defconst phi-grep-version "1.2.3")
 
 ;; + user options
 
@@ -445,14 +446,14 @@ CATEGORY."
                   (pgr:replace-overlay-string partner (pgr:overlay-string ov))))))
           (setq pgr:preview-file nil))))))
 
-(defadvice find-file-noselect (before pgr:find-file-ad activate)
+(define-advice find-file-noselect (:before (filename &optional nowarn &rest _) pgr:find-file-ad)
   "If the preview buffer is showing the file going to be found,
 reuse the buffer instead of finding file to keep modifications."
   (when (and pgr:preview-file
              (get-buffer "*phi-grep preview*")
              (string= (file-truename pgr:preview-file)
-                      (file-truename (ad-get-arg 0)))
-             (null (ad-get-arg 1)))
+                      (file-truename filename))
+             (null nowarn))
     (pgr:find-preview-file)))
 
 (defun pgr:quit ()
