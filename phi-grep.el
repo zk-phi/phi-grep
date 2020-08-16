@@ -201,20 +201,20 @@ each target files before searching into."
               (lambda (file) (not (file-symlink-p file)))
               (directory-files dirname t))))
     (message "scanning directory ... %s" (file-relative-name dirname))
-    (apply 'nconc
-           (pgr:filter (lambda (file)
-                         (and (file-regular-p file)
-                              (not (pgr:string-match-any file phi-grep-ignored-files))
-                              (or (null only-list)
-                                  (pgr:string-match-any file only-list))))
-                       lst)
-           (and recursive
-                (mapcar (lambda (dir)
-                          (when (and (file-directory-p dir)
-                                     (not (member (file-name-nondirectory dir)
-                                                  phi-grep-ignored-dirs)))
-                            (pgr:directory-files dir t only-list)))
-                        lst)))))
+    (nconc
+     (pgr:filter (lambda (file)
+                   (and (file-regular-p file)
+                        (not (pgr:string-match-any file phi-grep-ignored-files))
+                        (or (null only-list)
+                            (pgr:string-match-any file only-list))))
+                 lst)
+     (and recursive
+          (mapcan (lambda (dir)
+                    (when (and (file-directory-p dir)
+                               (not (member (file-name-nondirectory dir)
+                                            phi-grep-ignored-dirs)))
+                      (pgr:directory-files dir t only-list)))
+                  lst)))))
 
 ;; ++ overlays
 
