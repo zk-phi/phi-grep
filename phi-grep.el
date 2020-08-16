@@ -19,7 +19,7 @@
 ;; Author: zk_phi
 ;; URL: http://github.com/zk-phi/phi-grep
 ;; Version: 1.2.3
-;; Package-Requires: ((cl-lib "0.1") (emacs "25.1"))
+;; Package-Requires: ((cl-lib "0.1") (emacs "26.1"))
 
 ;;; Commentary:
 
@@ -56,6 +56,7 @@
 ;; 1.2.1 add recursive phi-grep feature
 ;; 1.2.2 add option phi-grep-enable-syntactic-regex
 ;; 1.2.3 migrate to nadvice.el
+;;       use mapcan for performance
 
 ;;; Code:
 
