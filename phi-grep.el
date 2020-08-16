@@ -180,7 +180,7 @@ each target files before searching into."
           (while (progn
                    (push (cons (- (match-beginning 0) beg) (- (match-end 0) beg)) matches)
                    (search-forward-regexp regexp end t)))
-          (push (cons (line-number-at-pos)
+          (push (cons (line-number-at-pos nil t)
                       (cons (buffer-substring-no-properties beg end) matches))
                 res)))
       (nreverse res))))
