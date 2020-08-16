@@ -19,7 +19,7 @@
 ;; Author: zk_phi
 ;; URL: http://github.com/zk-phi/phi-grep
 ;; Version: 1.2.3
-;; Package-Requires: ((cl-lib "0.1") (emacs "24.4"))
+;; Package-Requires: ((cl-lib "0.1") (emacs "25.1"))
 
 ;;; Commentary:
 
