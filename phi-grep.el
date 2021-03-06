@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t -*-
 ;;; phi-grep.el --- Interactively-editable recursive grep implementation in elisp
 
 ;; Copyright (C) 2014- zk_phi
