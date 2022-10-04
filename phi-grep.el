@@ -78,9 +78,9 @@
     "\.vdi$" "\.doc$" "\.jpg$" "\.avi$" "\.jpeg$" "\.png$"
     "\.xpm$" "\.jar$" "\.pbm$" "\.gif$" "\.xls$" "\.ppt$"
     "\.mdb$" "\.adp$" "\\<\\(TAGS\\)\\>" "\.tiff$" "\.img$"
-    "\.pdf$" "\.dvi$" "\.xbm$" "\.gpg$" "\.svg$" "\.rej$"
-    "\.exe$" "\.gch$" "\.o$" "\.so$" "\.class$"
-    "\.ppt$" "\.pptx$" "\.xls$" "\.xlsx$" "\.doc$" "\.docx$"
+    "\.pdf$" "\.dvi$" "\.xbm$" "\.gpg$" "\.rej$" "\.exe$"
+    "\.gch$" "\.o$" "\.so$" "\.class$" "\.ppt$" "\.pptx$"
+    "\.xls$" "\.xlsx$" "\.doc$" "\.docx$"
     "~$" "#[^/]+#$")
   "List of regexps that defines what files to ignore."
   :type '(repeat string)
